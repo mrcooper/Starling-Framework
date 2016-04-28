@@ -288,6 +288,11 @@ package starling.geom
             return new Ellipse(x, y, radiusX, radiusY);
         }
 
+        public static function createGradientEllipse(x:Number, y:Number, radiusX:Number, radiusY:Number):Polygon
+        {
+            return new GradientEllipse(x, y, radiusX, radiusY);
+        }
+
         /** Creates a circle with optimized implementations of triangulation, hitTest, etc. */
         public static function createCircle(x:Number, y:Number, radius:Number):Polygon
         {
@@ -489,10 +494,10 @@ class ImmutablePolygon extends Polygon
 
 class Ellipse extends ImmutablePolygon
 {
-    private var _x:Number;
-    private var _y:Number;
-    private var _radiusX:Number;
-    private var _radiusY:Number;
+    protected var _x:Number;
+    protected var _y:Number;
+    protected var _radiusX:Number;
+    protected var _radiusY:Number;
 
     public function Ellipse(x:Number, y:Number, radiusX:Number, radiusY:Number, numSides:int = -1)
     {
@@ -504,7 +509,7 @@ class Ellipse extends ImmutablePolygon
         super(getVertices(numSides));
     }
 
-    private function getVertices(numSides:int):Array
+    protected function getVertices(numSides:int):Array
     {
         if (numSides < 0) numSides = Math.PI * (_radiusX + _radiusY) / 4.0;
         if (numSides < 6) numSides = 6;
@@ -560,6 +565,54 @@ class Ellipse extends ImmutablePolygon
     override public function get isConvex():Boolean
     {
         return true;
+    }
+}
+
+class GradientEllipse extends Ellipse
+{
+    public function GradientEllipse(x:Number, y:Number, radiusX:Number, radiusY:Number, numSides:int = -1):void
+    {
+        super(x, y, radiusX, radiusY, numSides);
+    }
+
+    override protected function getVertices(numSides:int):Array
+    {
+        if (numSides < 0) numSides = Math.PI * (_radiusX + _radiusY) / 4.0;
+        if (numSides < 6) numSides = 6;
+
+        var vertices:Array = [];
+        var angleDelta:Number = 2 * Math.PI / numSides;
+        var angle:Number = 0;
+        var i:int = 0;
+
+        vertices[i * 2] = _x;
+        vertices[i * 2 + 1] = _y;
+        numSides++;
+
+        for (i = 1; i < numSides; ++i)
+        {
+            vertices[i * 2] = Math.cos(angle) * _radiusX + _x;
+            vertices[i * 2 + 1] = Math.sin(angle) * _radiusY + _y;
+            angle += angleDelta;
+        }
+
+        return vertices;
+    }
+
+    override public function triangulate(indexData:IndexData = null, offset:int = 0):IndexData
+    {
+        if (indexData == null) indexData = new IndexData((numVertices - 2) * 3);
+
+        var from:uint = 1;
+        var to:uint = numVertices - 1;
+
+        for (var i:int = from; i < to; ++i)
+        {
+            indexData.addTriangle(offset, offset + i, offset + i + 1);
+        }
+        indexData.addTriangle(offset, 1, to);
+
+        return indexData;
     }
 }
 

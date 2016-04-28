@@ -70,6 +70,23 @@ package starling.display
             appendPolygon(Polygon.createEllipse(x + radiusX, y + radiusY, radiusX, radiusY));
         }
 
+        public function drawGradientCircle(x:Number, y:Number, radius:Number, centerColor:int, centerAlpha:Number):void
+        {
+            drawGradientEllipse(x, y, radius * 2, radius * 2, centerColor, centerAlpha);
+        }
+
+        public function drawGradientEllipse(x:Number, y:Number, width:Number, height:Number, centerColor:int, centerAlpha:Number):void
+        {
+            var radiusX:Number = width  / 2.0;
+            var radiusY:Number = height / 2.0;
+
+            appendPolygon(Polygon.createGradientEllipse(x + radiusX, y + radiusY, radiusX, radiusY));
+
+            var mesh:Mesh = _polygons[_polygons.length - 1] as Mesh;
+            mesh.setVertexColor(0, centerColor);
+            mesh.setVertexAlpha(0, centerAlpha);
+        }
+
         /** Draws a rectangle. */
         public function drawRectangle(x:Number, y:Number, width:Number, height:Number):void
         {
